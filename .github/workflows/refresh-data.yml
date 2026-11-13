@@ -1,0 +1,25 @@
+# Pull the latest Phuket open data each month and commit data/phuket-data.js if it changed.
+name: Refresh data
+on:
+  schedule:
+    - cron: '0 3 5 * *'   # 5th of every month, 03:00 UTC (sources usually publish the previous month by then)
+  workflow_dispatch:       # "Run workflow" button for a manual refresh
+permissions:
+  contents: write
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build data file
+        run: python etl/build_data.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/phuket-data.js
+          git diff --cached --quiet || git commit -m "Refresh Phuket open data"
+          git push

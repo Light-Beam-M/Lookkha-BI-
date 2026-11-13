@@ -1,0 +1,7 @@
+# 33 MB raw download; the site only uses the compressed Photo/hero.mp4
+Photo/videoplayback.mp4
+# local Claude Code config and installed skills, not part of the site
+.claude/
+# old versions, kept locally only
+v1.html
+v2.html
