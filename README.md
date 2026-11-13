@@ -1,59 +1,75 @@
-# Lookkha ลูกค้า
+# Lookkha
 
-Tourism BI for Phuket merchants: who visits, when they come, and what to prepare next week.
-All visitor figures are **mock data**, used only to demonstrate the analysis.
+Tourism BI for Phuket businesses: who the customers are, when they come, and how to prepare stock, staff and languages this month. Built on real Phuket open data.
 
-- `index.html`: the site, built on real Phuket open data (see below)
+## What's on the site
 
-## ข้อมูลจริง / real data (index.html)
+`index.html` is a single static page:
 
-- `etl/build_data.py` ดึงข้อมูลจาก phuket.gdcatalog.go.th (data.go.th, สัญญาอนุญาต Open Data Common) แล้วเขียน `data/phuket-data.js`
-  - dataset_10_36 ผู้โดยสารต่างชาติขาออกระหว่างประเทศ แยกสัญชาติ รายเดือน (ด่านตรวจคนเข้าเมืองท่าอากาศยานภูเก็ต)
-  - dataset_10_02 ผู้โดยสารเข้า-ออกสนามบินภูเก็ต รายเดือน ในประเทศ/ระหว่างประเทศ
-  - dataset_10_34 ผู้เยี่ยมเยือนรายปี ไทย/ต่างชาติ · dataset_10_09 ค่าใช้จ่ายต่อคนต่อวัน · dataset_10_08 รายได้ท่องเที่ยว
-- `.github/workflows/refresh-data.yml` รันสคริปต์ทุกวันที่ 5 ของเดือน และ commit ไฟล์ข้อมูลถ้ามีการเปลี่ยนแปลง
-- วิธีคำนวณ
-  - **นักท่องเที่ยวรายเดือน** = ผู้โดยสารสนามบินรายเดือน (ต่างชาติ: ขาออกแยกสัญชาติ, ไทย: ขาเข้าในประเทศ) × อัตราปรับเทียบ ที่ทำให้ยอดรวมปีล่าสุดตรงกับสถิติผู้เยี่ยมเยือนทางการ
-  - **รายได้** = นักท่องเที่ยว × รายได้ต่อหัว (รายได้ทางการปีล่าสุด ÷ ผู้เยี่ยมเยือนปีเดียวกัน)
-  - **คาดการณ์** = เดือนเดียวกันปีก่อน × อัตราเติบโต 3 เดือนล่าสุด แยกไทย/ต่างชาติ
-  - **ความแม่นยำ** วัดจากการทดสอบย้อนหลัง 1 เดือนล่วงหน้า (MAPE) ช่วงคาดการณ์ = ± MAPE × √(จำนวนเดือนล่วงหน้า)
-  - **ตัวเปรียบเทียบ (benchmark)**: การเติบโตของแต่ละสัญชาติเทียบกับภาพรวมทั้งตลาด
-- ข้อจำกัด: สัดส่วนรายโซนยังเป็นสมมติฐาน (ไม่มีข้อมูลรายพื้นที่) · ข้อมูลเป็นรายเดือน จึงไม่มีคำแนะนำรายสัปดาห์ · ผู้โดยสารสนามบินไม่รวมผู้ที่เดินทางทางถนนหรือทางเรือ (ปรับด้วยอัตราปรับเทียบรายปี)
+1. **Advice for your shop**: pick your zone and get six answers. These are this month's stock change, next month's outlook, languages for signs and menus, the fastest-growing market, peak months, and the quietest months.
+2. **Overview**: KPIs, a visitor map, and what to prepare this month (with rain and source-market holidays).
+3. **Who is coming**: visitors by nationality, seasonality by nationality, and yearly tourism revenue.
+4. **When they come**: monthly visitors with a 3-month forecast and error band, a 14-day rain forecast, and a 60-day holiday calendar.
 
-Run locally: `python -m http.server 8000`, then open `http://localhost:8000/`.
+## Data
 
-Not published: `Photo/videoplayback.mp4` (raw 33 MB source, see `.gitignore`).
+`etl/build_data.py` downloads the datasets below from [phuket.gdcatalog.go.th](https://phuket.gdcatalog.go.th/) (data.go.th, licence: Open Data Common) and writes `data/phuket-data.js`.
 
-## วิธีคำนวณ
+| Dataset | Content | Granularity | Publisher |
+|---|---|---|---|
+| dataset_10_36 | Foreign international departures by nationality | Monthly | Phuket Airport Immigration |
+| dataset_10_02 | Phuket airport passengers, domestic / international | Monthly | AOT, Phuket Airport |
+| dataset_10_34 | Visitors, Thai / foreign | Yearly | Phuket Tourism and Sports Office |
+| dataset_10_09 | Average spend per person per day | Yearly | Phuket Tourism and Sports Office |
+| dataset_10_08 | Tourism revenue, Thai / foreign | Yearly | Phuket Tourism and Sports Office |
 
-- **คาดการณ์ 3 เดือน**: seasonal naive ค่าเฉลี่ยของเดือนเดียวกันปีก่อน × 1.08 และ 2 ปีก่อน × 1.08²
-- **สัปดาห์หน้า**: ผสมอัตรารายวันของเดือนนี้กับเดือนหน้า ตามวันที่ปัจจุบัน
-- **รายได้ท่องเที่ยว** = นักท่องเที่ยว × ใช้จ่าย/คน/วัน × วันพักเฉลี่ย
-- **วันฝนตก** = ปริมาณฝน ≥ 5 มม.
-- **YoY** เทียบช่วงเดียวกันของปีก่อน
+These APIs are called live in the browser:
+- Open-Meteo for the 14-day rain forecast
+- Nager.Date for source-market public holidays
+- Esri World Imagery for the satellite map
 
-### หน้า "ร้านคุณควรทำอะไร" (v2)
-
-ทุกคำตอบคำนวณตามโซนที่เลือก
-- **เตรียมของสัปดาห์หน้า**: เปลี่ยนแปลงของนักท่องเที่ยวสัปดาห์หน้าเทียบสัปดาห์นี้ (±3% ถือว่าเท่าเดิม)
-- **เดือนหน้า**: นักท่องเที่ยวเฉลี่ยต่อวันของเดือนหน้า (คาดการณ์) เทียบเดือนนี้
-- **ภาษาป้าย/เมนู**: สัดส่วนนักท่องเที่ยวตามภาษาหลักของสัญชาติ
-- **ลูกค้าที่สร้างรายได้มากสุด**: นักท่องเที่ยว × ใช้จ่ายต่อวัน × วันพัก (ไม่นับ "อื่นๆ")
-- **เดือนที่ควรจ้างคนเพิ่ม / ปิดปรับปรุง**: 3 เดือนที่คนมากสุด / 2 เดือนที่คนน้อยสุด จากข้อมูลย้อนหลัง 24 เดือน
+`.github/workflows/refresh-data.yml` runs the ETL on the 5th of every month and commits `data/phuket-data.js` if it changed. For this to work, set **Settings → Actions → General → Workflow permissions** to **Read and write**.
 
 ## Method
 
-- **3-month forecast**: seasonal naive, mean of same month last year × 1.08 and two years ago × 1.08²
-- **Next week**: blend of this month's and next month's daily rate by today's date
-- **Tourism revenue** = visitors × spend/person/day × avg. stay
-- **Rainy day** = rain ≥ 5 mm
-- **YoY** compares the same period last year
+- **Monthly visitors** = monthly airport passengers × a calibration ratio, so that the latest full year adds up to the official yearly visitor total.
+  - Foreign visitors use international departures by nationality.
+  - Thai visitors use domestic arrivals.
+- **Revenue** = visitors × revenue per visitor (latest official revenue ÷ visitors in the same year).
+- **Spend per person per day** comes from the latest yearly statistics, weighted by the Thai / foreign mix.
+- **Forecast** = same month last year × growth over the latest 3 months, calculated separately for Thai and foreign visitors.
+- **Accuracy**: a 1-month-ahead backtest of the same method on real history (MAPE). The forecast band is ± MAPE × √(months ahead).
+- **Benchmark**: each nationality's growth (latest 3 months vs a year earlier) compared with the whole market.
+- **YoY** compares the same months of the previous year.
+- **Rainy day** = rain ≥ 5 mm.
 
-### "What your shop should do" page (v2)
+### Advice page
 
 Every answer follows the selected zone.
-- **Stock for next week**: change in visitors next week vs this week (within ±3% counts as unchanged)
-- **Next month**: average daily visitors next month (forecast) vs this month
-- **Sign/menu languages**: visitor share by each nationality's main language
-- **Top revenue customers**: visitors × spend per day × nights stayed (excluding "Others")
-- **Months to add staff / renovate**: top 3 / bottom 2 months by average visitors over 24 months of history
+
+- **Stock this month**: this month's forecast, daily average, vs the latest month of real data. Changes within ±3% count as unchanged.
+- **Next month**: next month's forecast daily average vs this month.
+- **Sign / menu languages**: visitor share by each nationality's main language.
+- **Fastest-growing market**: highest growth over the latest 3 months vs a year earlier, excluding "Other foreign".
+- **Months to add staff / renovate**: the 3 busiest and 2 quietest calendar months, averaged over all real monthly data.
+
+## Limitations
+
+- **Zones:** the visitor split by zone is an assumption, because no area-level data is published. It is labelled as an estimate on the site.
+- **Spend:** there is no spend data by nationality, so every foreign market uses the foreign average.
+- **Granularity:** the data is monthly, so the site gives no weekly advice.
+- **Airport data:** it doesn't count visitors arriving by road or sea. The yearly calibration ratio corrects for this.
+
+## Run locally
+
+```bash
+python -m http.server 8000
+```
+
+Then open http://localhost:8000/. To refresh the data by hand:
+
+```bash
+python etl/build_data.py
+```
+
+The raw 33 MB hero video source (`Photo/videoplayback.mp4`) is not published; see `.gitignore`.
