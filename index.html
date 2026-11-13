@@ -122,7 +122,7 @@ section.page{height:100vh;min-height:620px;scroll-snap-align:start;scroll-snap-s
 .hol{list-style:none;overflow:auto;display:flex;flex-direction:column;gap:6px;padding-right:4px}
 .hol li{display:grid;grid-template-columns:64px 40px 1fr auto;align-items:center;gap:10px;padding:7px 10px;border-radius:10px;background:#fff;border:1px solid var(--line);font-size:13px}
 .hol .d{font-weight:600}
-.hol .cc{font-size:11px;font-weight:700;text-align:center;padding:2px 0;border-radius:6px;background:var(--sky-soft);color:var(--sky)}
+.hol .flag{width:28px;height:21px;border-radius:4px;object-fit:cover;box-shadow:0 0 0 1px rgba(255,255,255,.18)}
 .hol .far{color:var(--muted);font-size:12px;white-space:nowrap}
 .hol .empty{display:block;color:var(--muted);background:none;border:0}
 /* Footer: sources at the bottom of the site */
@@ -187,6 +187,10 @@ section.hero{position:relative;height:100vh;min-height:760px;scroll-snap-align:s
 /* Hero: 3-step intro */
 .steps{list-style:none;display:grid;grid-template-columns:repeat(3,minmax(0,230px));gap:12px;margin-top:6px}
 html.locked,html.locked body{overflow:hidden} /* hero locked until "Get started" */
+/* header controls keep their full width; the brand tagline gives way first on narrower desktops */
+header .seg,header select,header .tag{flex:none}
+.seg-label{font-size:12px;color:var(--muted)}
+@media (max-width:1500px){header .brand small{display:none}}
 /* page dots: the page name slides in beside the dot on hover / keyboard focus */
 #dots button{position:relative}
 #dots button:hover{background:var(--sky)}
@@ -206,13 +210,26 @@ a.brand{color:inherit;text-decoration:none}
 .zones button{padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(0,28,36,.45);color:var(--muted);font-size:13px;transition:background .2s,color .2s,border-color .2s}
 .zones button:hover{color:var(--ink);border-color:var(--sky)}
 .zones button[aria-pressed=true]{background:var(--sky);border-color:var(--sky);color:#001C24;font-weight:600}
-.g0{grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr)}
-.ans{justify-content:center;gap:6px;overflow:visible;padding:18px 22px}
+.g0{flex:none;grid-template-columns:repeat(3,1fr)} /* cards size to their content instead of stretching to fill the screen */
+.ans{justify-content:center;gap:6px;overflow:visible;padding:18px 22px;min-height:clamp(130px,20vh,200px)}
 .ans:hover,.ans:focus-within{z-index:5}
 .ans .q{font-size:14px;color:var(--muted)}
 .ans .a{font-size:30px;font-weight:700;line-height:1.25}
 .ans .a.up{color:var(--up)}.ans .a.down{color:var(--down)}
 .ans .d{font-size:13px;color:var(--muted)}
+
+/* Chart insight: a pill under each chart; the panel opens upward over the chart so the layout never jumps */
+.insight{position:relative;margin-top:6px;flex:none}
+.map-card .insight{margin:6px 12px 10px}
+.insight summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:3px 12px;border-radius:999px;font-size:12px;
+  color:var(--sky);border:1px solid rgba(0,184,241,.35);background:rgba(0,28,36,.4);transition:background .2s}
+.insight summary::-webkit-details-marker{display:none}
+.insight summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-135deg) translate(-1px,-1px);transition:transform .2s}
+.insight[open] summary::before{transform:rotate(45deg)}
+.insight summary:hover{background:rgba(0,184,241,.12)}
+.ins-body{position:absolute;left:0;right:0;bottom:calc(100% + 6px);z-index:1000;display:grid;gap:8px;padding:12px 14px;border-radius:14px;
+  background:var(--card-strong);border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.45);font-size:13px;line-height:1.55;color:var(--ink)}
+.ins-body b{color:var(--sky);margin-right:4px}
 
 /* (i) explanations on KPIs */
 /* SVG icon, not a text "i": font metrics pushed the letter off-centre in the circle */
@@ -266,7 +283,7 @@ a.brand{color:inherit;text-decoration:none}
   .pill{transition:none}
   html{scroll-behavior:auto}
   .page .card{opacity:1;transform:none;animation:none!important}
-  #dots button,#dots button::after,.seg button{transition:none}
+  #dots button,#dots button::after,.seg button,.insight summary,.insight summary::before{transition:none}
 }
 </style>
 </head>
@@ -275,7 +292,9 @@ a.brand{color:inherit;text-decoration:none}
   <a class="brand" href="#top" aria-label="Lookkha"><span class="mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 19c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><circle cx="12" cy="7" r="3"/></svg></span>
     <b>Look<span>kha</span></b>
     <small><span data-l="th">ลูกค้า · รู้ใจนักท่องเที่ยวภูเก็ต</span><span data-l="en">Know your Phuket customers</span></small></a>
-  <div class="seg" id="period" role="group" aria-label="Period">
+  <span class="seg-label" id="periodLabel"><span data-l="th">ช่วงเวลา</span><span data-l="en">Period</span></span>
+  <!-- button text is replaced by the real month range in renderFilters() -->
+  <div class="seg" id="period" role="group" aria-labelledby="periodLabel">
     <button data-p="m1"><span data-l="th">เดือนล่าสุด</span><span data-l="en">Latest month</span></button>
     <button data-p="m3"><span data-l="th">3 เดือน</span><span data-l="en">3 months</span></button>
     <button data-p="ytd"><span data-l="th">ตั้งแต่ต้นปี</span><span data-l="en">Year to date</span></button>
@@ -336,7 +355,7 @@ a.brand{color:inherit;text-decoration:none}
       <h3><span><span data-l="th">แผนที่ความหนาแน่นนักท่องเที่ยว</span><span data-l="en">Visitor density map</span>
         <span class="hint"> · <span data-l="th">วางเมาส์บนจุดเพื่อดูข้อมูลโซน คลิกเพื่อกรอง</span><span data-l="en">hover a zone for details, click to filter</span></span></span>
         <span class="tag approx"><span data-l="th">ประมาณการรายโซน</span><span data-l="en">Zone estimate</span></span></h3>
-      <div id="cMap" role="region" aria-label="Satellite map of Phuket with visitor density by zone"></div>
+      <div id="cMap" role="region" aria-label="Satellite map of Phuket with visitor density by zone"></div><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">แสดงว่านักท่องเที่ยวกระจายอยู่ในโซนไหนของเกาะ จุดใหญ่และสว่างคือคนมาก ใช้ดูว่าโซนร้านของคุณคึกคักแค่ไหนเทียบกับโซนอื่น</span><span data-l="en">Shows where visitors are spread across the island; bigger, brighter spots mean more people. Use it to see how busy your zone is compared with others.</span></p><p id="insMap"></p></div></details>
     </div>
     <div class="card next">
       <h3><span><span data-l="th">เดือนนี้ควรเตรียมอะไร</span><span data-l="en">What to prepare this month</span></span><span id="wxTag"></span></h3>
@@ -350,9 +369,9 @@ a.brand{color:inherit;text-decoration:none}
     <span data-l="th"><span class="info" tabindex="0" role="img" aria-label="คลิกแท่งกราฟหรือช่องในตารางฤดูกาล เพื่อกรองข้อมูลทั้งหน้าตามสัญชาตินั้น" data-tip="คลิกแท่งกราฟหรือช่องในตารางฤดูกาล เพื่อกรองข้อมูลทั้งหน้าตามสัญชาตินั้น"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg></span></span><span data-l="en"><span class="info" tabindex="0" role="img" aria-label="Click a bar or a seasonality cell to filter the whole page by that nationality" data-tip="Click a bar or a seasonality cell to filter the whole page by that nationality"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-5"/><path d="M12 8h.01"/></svg></span></span>
     <p><span data-l="th">สัญชาติ ฤดูกาล และรายได้</span><span data-l="en">Nationalities, seasonality and revenue</span></p></div>
   <div class="grid g2">
-    <div class="card span2"><h3><span><span data-l="th">นักท่องเที่ยวตามสัญชาติ</span><span data-l="en">Visitors by nationality</span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cNat"></div></div>
-    <div class="card"><h3><span><span data-l="th">ฤดูกาล: เดือน × สัญชาติ (เทียบเดือนเฉลี่ยของแต่ละสัญชาติ)</span><span data-l="en">Seasonality: month × nationality (vs each nationality's average month)</span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cSeason"></div></div>
-    <div class="card"><h3><span><span data-l="th">รายได้จากการท่องเที่ยวรายปี (ล้านบาท)</span><span data-l="en">Tourism revenue per year (million THB)</span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cSpend"></div></div>
+    <div class="card span2"><h3><span><span data-l="th">นักท่องเที่ยวตามสัญชาติ</span><span data-l="en">Visitors by nationality</span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cNat"></div><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">จำนวนนักท่องเที่ยวแยกตามสัญชาติในช่วงที่เลือก ใช้ดูว่าลูกค้ากลุ่มหลักเป็นใคร เพื่อเลือกภาษา เมนู และโปรโมชัน</span><span data-l="en">Visitors by nationality for the selected period. Use it to see who your main customers are when choosing languages, menus and promotions.</span></p><p id="insNat"></p></div></details></div>
+    <div class="card"><h3><span><span data-l="th">ฤดูกาล: เดือน × สัญชาติ (เทียบเดือนเฉลี่ยของแต่ละสัญชาติ)</span><span data-l="en">Seasonality: month × nationality (vs each nationality's average month)</span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cSeason"></div><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">แต่ละช่องเทียบเดือนนั้นกับเดือนเฉลี่ยของสัญชาตินั้น สีส้มคือมามากกว่าปกติ สีฟ้าคือน้อยกว่าปกติ ใช้วางแผนว่าช่วงไหนควรเจาะลูกค้ากลุ่มไหน</span><span data-l="en">Each cell compares that month with the nationality's average month: orange = busier than usual, blue = quieter. Use it to plan which group to target when.</span></p><p id="insSeason"></p></div></details></div>
+    <div class="card"><h3><span><span data-l="th">รายได้จากการท่องเที่ยวรายปี (ล้านบาท)</span><span data-l="en">Tourism revenue per year (million THB)</span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cSpend"></div><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">รายได้จากการท่องเที่ยวของภูเก็ตรายปี แยกชาวไทยและชาวต่างชาติ ใช้ดูภาพใหญ่ว่าตลาดฟื้นตัวและเติบโตแค่ไหน</span><span data-l="en">Phuket's yearly tourism revenue, Thai vs foreign. Use it for the big picture: how far the market has recovered and grown.</span></p><p id="insRev"></p></div></details></div>
   </div>
 </section>
 
@@ -360,9 +379,9 @@ a.brand{color:inherit;text-decoration:none}
   <div class="page-head"><span class="no">03</span><h2><span data-l="th">ลูกค้ามาช่วงไหน</span><span data-l="en">When they come</span></h2>
     <p><span data-l="th">ข้อมูลจริงรายเดือน คาดการณ์ 3 เดือนพร้อมช่วงความคลาดเคลื่อน และปฏิทิน 60 วัน</span><span data-l="en">Real monthly data, a 3-month forecast with error range, and a 60-day calendar</span></p></div>
   <div class="grid g3">
-    <div class="card wide"><h3><span><span data-l="th">นักท่องเที่ยวรายเดือน + คาดการณ์ 3 เดือน</span><span data-l="en">Monthly visitors + 3-month forecast</span><span class="hint" id="acc"></span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cTrend"></div></div>
-    <div class="card"><h3><span><span data-l="th">ปริมาณฝน 14 วันข้างหน้า (มม.)</span><span data-l="en">Rain, next 14 days (mm)</span></span><span id="wxTag2"></span></h3><div class="chart" id="cRain"></div></div>
-    <div class="card"><h3><span><span data-l="th">ปฏิทิน 60 วัน: วันหยุดประเทศต้นทาง</span><span data-l="en">60-day calendar: source-market holidays</span></span><span id="holTag"></span></h3><ul class="hol" id="hol"></ul></div>
+    <div class="card wide"><h3><span><span data-l="th">นักท่องเที่ยวรายเดือน + คาดการณ์ 3 เดือน</span><span data-l="en">Monthly visitors + 3-month forecast</span><span class="hint" id="acc"></span></span><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real data</span></span></h3><div class="chart" id="cTrend"></div><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">นักท่องเที่ยวรายเดือนจากข้อมูลจริง พร้อมคาดการณ์ 3 เดือนข้างหน้า แถบสีส้มคือช่วงที่ตัวเลขจริงน่าจะอยู่ ใช้วางแผนสต็อกและพนักงานล่วงหน้า</span><span data-l="en">Monthly visitors from real data plus a 3-month forecast; the orange band is where the real figure is likely to land. Use it to plan stock and staff ahead.</span></p><p id="insTrend"></p></div></details></div>
+    <div class="card"><h3><span><span data-l="th">ปริมาณฝน 14 วันข้างหน้า (มม.)</span><span data-l="en">Rain, next 14 days (mm)</span></span><span id="wxTag2"></span></h3><div class="chart" id="cRain"></div><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">ปริมาณฝนรายวัน 14 วันข้างหน้า แท่งสีเข้มคือวันที่ฝนตกตั้งแต่ 5 มม. ขึ้นไป ใช้เตรียมที่นั่งในร่ม บริการส่ง หรือสินค้าหน้าฝน</span><span data-l="en">Daily rain for the next 14 days; dark bars are rainy days (5 mm or more). Use it to prepare indoor seating, delivery or rainy-day products.</span></p><p id="insRain"></p></div></details></div>
+    <div class="card"><h3><span><span data-l="th">ปฏิทิน 60 วัน: วันหยุดประเทศต้นทาง</span><span data-l="en">60-day calendar: source-market holidays</span></span><span id="holTag"></span></h3><ul class="hol" id="hol"></ul><details class="insight"><summary><span data-l="th">Insight กราฟนี้</span><span data-l="en">Chart insight</span></summary><div class="ins-body"><p><b><span data-l="th">ใช้ดูอะไร</span><span data-l="en">What it shows</span></b> <span data-l="th">วันหยุดราชการของประเทศที่นักท่องเที่ยวมาเยอะ ใน 60 วันข้างหน้า ช่วงวันหยุดยาวของประเทศไหน มักมีนักท่องเที่ยวจากประเทศนั้นเพิ่มขึ้น</span><span data-l="en">Public holidays in the main source countries over the next 60 days; long holidays in a country usually bring more of its visitors.</span></p><p id="insHol"></p></div></details></div>
   </div>
 </section>
 
@@ -394,6 +413,11 @@ const D=window.PHUKET_DATA;
 const NATS=[...D.nat.codes,'TH']; // top foreign markets by the last 12 months, 'OT' = all other foreign, 'TH' = Thai (domestic)
 const NAT_NAME={...D.nat.names,OT:['ต่างชาติอื่นๆ','Other foreign'],TH:['ไทย','Thailand']};
 const LANG_NAME={...D.nat.lang,OT:['อังกฤษ','English'],TH:['ไทย','Thai']};
+// one fixed colour per nationality (validated categorical palette, dark-mode steps): colour follows the nationality, never its rank.
+// Thai always takes slot 2 (orange), shared with the revenue chart; foreign markets take the other slots in data order;
+// past 8 colours a market folds into the "other" grey, like "Other foreign".
+const PAL=['#3987e5','#d95926','#199e70','#c98500','#d55181','#008300','#9085e9','#e66767'],OTHER_C='#5f7d87';
+const NAT_COLOR=(()=>{const free=[0,2,3,4,5,6,7];let k=0;return NATS.map(n=>n==='TH'?PAL[1]:n==='OT'||k>=free.length?OTHER_C:PAL[free[k++]])})();
 const ZONES=[ // c = [lon, lat], approximate centre of each zone
   {c:[98.302,7.895],th:'ป่าตอง',en:'Patong',dir:'left'},
   {c:[98.305,7.835],th:'กะตะ–กะรน',en:'Kata–Karon',dir:'left'}, // label on the sea side, clear of Chalong
@@ -638,10 +662,10 @@ function renderNat(){
     xAxis:{type:'value',...AX,axisLabel:{...AXL,formatter:cmp}},
     yAxis:{type:'category',data:rows.map(r=>natName(r.ni)),...AX,axisLabel:{...AXL,fontSize:13,color:INK}},
     series:[{type:'bar',barWidth:'58%',cursor:'pointer',
-      data:rows.map(r=>({value:r.v,ni:r.ni,itemStyle:{opacity:dim(state.nat==null||state.nat===r.ni)}})),
-      itemStyle:{borderRadius:[0,4,4,0],color:lg('#036D8B',SKY,true)},
+      data:rows.map(r=>({value:r.v,ni:r.ni,itemStyle:{color:NAT_COLOR[r.ni],opacity:dim(state.nat==null||state.nat===r.ni)}})),
+      itemStyle:{borderRadius:[0,4,4,0]},
       label:{show:true,position:'right',color:INK,fontFamily:FONT,formatter:p=>cmp(p.value)},
-      emphasis:{itemStyle:{color:lg(SKY2,'#7DD3FC',true)}}}]});
+      emphasis:{itemStyle:{shadowBlur:12,shadowColor:'rgba(255,255,255,.25)'}}}]});
 }
 
 function renderSeason(){
@@ -654,9 +678,13 @@ function renderSeason(){
     tooltip:{...TT,trigger:'item',formatter:p=>`<b>${natName(p.value[1])}</b> · ${moyName(p.value[0])}<br>${fmt(p.value[3])} ${T().people} · ${Math.round(p.value[2]*100)}% ${lang==='th'?'ของเดือนเฉลี่ย':'of an average month'}`},
     grid:{left:8,right:12,top:4,bottom:44,containLabel:true},
     xAxis:{type:'category',data:Array.from({length:12},(_,m)=>moyName(m)),...AX,splitArea:{show:false}},
-    yAxis:{type:'category',data:NATS.map((_,ni)=>natName(ni)),...AX,axisLabel:{...AXL,color:INK}},
-    visualMap:{min:.5,max:1.5,dimension:2,calculable:false,orient:'horizontal',left:'center',bottom:0,itemWidth:10,itemHeight:180,textStyle:{color:MUTED,fontFamily:FONT},formatter:v=>`${Math.round(v*100)}%`,
-      inRange:{color:['#003240','#01495D','#036D8B','#3A8094','#39AACA','#00B8F1']}},
+    // each row label carries its nationality's colour dot, the same colour as its bar
+    yAxis:{type:'category',data:NATS.map((_,ni)=>natName(ni)),...AX,axisLabel:{...AXL,color:INK,formatter:(v,i)=>`{d${i}|●} ${v}`,
+      rich:Object.fromEntries(NATS.map((_,i)=>['d'+i,{color:NAT_COLOR[i],fontSize:11}]))}},
+    // diverging around 100% (an average month): blue = quieter, grey = normal, orange = busier
+    visualMap:{min:.5,max:1.5,dimension:2,calculable:false,orient:'horizontal',left:'center',bottom:0,itemWidth:10,itemHeight:180,
+      text:lang==='th'?['คนมากกว่าปกติ','คนน้อยกว่าปกติ']:['Busier','Quieter'],textGap:8,textStyle:{color:MUTED,fontFamily:FONT},
+      inRange:{color:['#1c5cab','#5598e7','#3d4b52','#ec9a5c','#d95926']}},
     series:[{type:'heatmap',data,cursor:'pointer',itemStyle:{borderColor:'#001C24',borderWidth:2,borderRadius:4},
       emphasis:{itemStyle:{borderColor:INK,borderWidth:1}}}]});
 }
@@ -670,7 +698,7 @@ function renderRevenue(){
     xAxis:{type:'category',data:ys.map(y=>String(lang==='th'?y+543:y)),...AX},
     yAxis:{type:'value',...AX,axisLabel:{...AXL,formatter:cmp}},
     series:[{name:t.revFO,type:'bar',stack:'r',barWidth:'55%',data:ys.map(y=>D.revenue[y].fo),itemStyle:{color:SKY}},
-      {name:t.revTH,type:'bar',stack:'r',data:ys.map(y=>D.revenue[y].th),itemStyle:{color:GREEN,borderRadius:[3,3,0,0]}}]});
+      {name:t.revTH,type:'bar',stack:'r',data:ys.map(y=>D.revenue[y].th),itemStyle:{color:NAT_COLOR[NATS.indexOf('TH')],borderRadius:[3,3,0,0]}}]});
 }
 
 function renderTrend(){
@@ -767,13 +795,15 @@ document.getElementById('srcTable').rows[0].insertAdjacentHTML('afterend',D.sour
   `<td><a href="${esc(x.page)}" target="_blank" rel="noopener" title="${esc(x.id)} · data.go.th">${esc(x.org)} ↗</a></td>`+
   `<td><span class="tag live"><span data-l="th">ข้อมูลจริง</span><span data-l="en">Real</span></span></td></tr>`).join(''));
 
+// flag images, not emoji: Windows shows flag emoji as two letters. h.cc is already limited to HOL_CC codes.
+const FLAG=cc=>`https://cdn.jsdelivr.net/npm/flag-icons@7.2.3/flags/4x3/${cc.toLowerCase()}.svg`;
 function renderHolidays(){
   const t=T(),ul=document.getElementById('hol');
   document.getElementById('holTag').innerHTML=holStatus==='live'?'<span class="tag live">Nager.Date</span>':'';
   if(!holidays){ul.innerHTML=`<li class="empty">${holStatus==='fail'?t.holFail:t.loading}</li>`;return}
   const list=holidays.filter(h=>daysAway(h.date)>=0&&daysAway(h.date)<=60&&(state.nat==null||h.cc===NATS[state.nat]||h.cc==='TH'));
   if(!list.length){ul.innerHTML=`<li class="empty">${holStatus==='fail'?t.holFail:t.noHol60}</li>`;return}
-  ul.innerHTML=list.map(h=>`<li><span class="d">${dLabel(h.date)}</span><span class="cc" title="${esc(ccName(h.cc))}">${h.cc}</span><span>${esc(h.cc==='TH'&&lang==='th'?h.local:h.name)}</span><span class="far">${t.inDays(daysAway(h.date))}</span></li>`).join('');
+  ul.innerHTML=list.map(h=>`<li><span class="d">${dLabel(h.date)}</span><img class="flag" src="${FLAG(h.cc)}" alt="${esc(ccName(h.cc))}" title="${esc(ccName(h.cc))}" width="28" height="21" loading="lazy"><span>${esc(h.cc==='TH'&&lang==='th'?h.local:h.name)}</span><span class="far">${t.inDays(daysAway(h.date))}</span></li>`).join('');
 }
 
 // ---------- Answers for shops (page 0): computed straight from the cube for the chosen zone ----------
@@ -809,18 +839,67 @@ function renderAnswers(){
 {const s=langShares([CUR]).reduce((a,x)=>a+x[1],0);console.assert(Math.abs(s-1)<1e-9,'language shares should sum to 1')}
 {const p=monthProfile();console.assert(p.length===12&&p.every(x=>x.v>0),'month profile should have 12 positive months')}
 
+// ---------- Chart insights: the live "right now" line under each chart ----------
+const TL=(th,en)=>lang==='th'?th:en;
+function renderInsights(){
+  const per=periodIdx(),BY=y=>lang==='th'?y+543:y;
+  const set=(id,h)=>{const e=document.getElementById(id);if(e)e.innerHTML=`<b>${TL('ตอนนี้','Right now')}</b> ${h}`};
+  // map: busiest zone in the selected period
+  const zt=ZONES.map((_,zi)=>agg(per,{...state,zone:zi}).v),zsum=zt.reduce((a,b)=>a+b,0),zi=zt.indexOf(Math.max(...zt)),zp=(zt[zi]/zsum*100).toFixed(0);
+  set('insMap',TL(`โซนที่คนมากที่สุดคือ<b>${esc(ZONES[zi].th)}</b> ราว ${zp}% ของทั้งเกาะ (ตัวเลขรายโซนเป็นการประมาณ)`,
+    `Busiest zone: <b>${esc(ZONES[zi].en)}</b>, about ${zp}% of the island (zone figures are estimates)`));
+  // nationality: largest group and the top foreign markets
+  const tot=agg(per,{...state,nat:null}).v,rk=natRank(per,{...state,nat:null}).filter(r=>NATS[r.ni]!=='OT'),sh=r=>(r.v/tot*100).toFixed(0);
+  const fo=rk.filter(r=>NATS[r.ni]!=='TH').slice(0,3).map(r=>`${natName(r.ni)} ${sh(r)}%`).join(', ');
+  set('insNat',TL(`กลุ่มใหญ่สุดคือ<b>${natName(rk[0].ni)}</b> ${sh(rk[0])}% · ตลาดต่างชาติอันดับ 1–3: ${fo}`,
+    `Largest group: <b>${natName(rk[0].ni)}</b> ${sh(rk[0])}% · top foreign markets: ${fo}`));
+  // seasonality: peak and quietest month for the three largest groups
+  const prof=ni=>{const r=Array.from({length:12},(_,m)=>{const idx=MONTHS.map((mo,i)=>mo.m===m&&!mo.fc?i:-1).filter(i=>i>=0);return agg(idx,{nat:ni,zone:state.zone}).v/idx.length}),
+    mean=r.reduce((a,b)=>a+b,0)/12;return r.map(v=>v/mean)};
+  set('insSeason',rk.slice(0,3).map(r=>{const p=prof(r.ni),hi=p.indexOf(Math.max(...p)),lo=p.indexOf(Math.min(...p)),P=i=>Math.round(p[i]*100);
+    return TL(`${natName(r.ni)}มามากสุดเดือน${monthLong(hi)} (${P(hi)}%) น้อยสุดเดือน${monthLong(lo)} (${P(lo)}%)`,
+      `${natName(r.ni)}: peak ${monthLong(hi)} (${P(hi)}%), low ${monthLong(lo)} (${P(lo)}%)`)}).join(' · '));
+  // revenue: latest year vs the year before and vs pre-COVID 2019
+  const ys=Object.keys(D.revenue).map(Number).sort((a,b)=>a-b),y1=ys.at(-1),y0=ys.at(-2),R=y=>D.revenue[y].th+D.revenue[y].fo;
+  const pre=D.revenue[2019]?` · ${TL('เทียบก่อนโควิด','vs pre-COVID')} (${BY(2019)}) ${pct(R(y1)/R(2019)-1)}`:'',foSh=(D.revenue[y1].fo/R(y1)*100).toFixed(0);
+  set('insRev',TL(`ปี ${BY(y1)} รายได้ ${fmt(R(y1))} ล้านบาท (${pct(R(y1)/R(y0)-1)} จากปี ${BY(y0)})${pre} · ต่างชาติคิดเป็น ${foSh}%`,
+    `${y1}: ${fmt(R(y1))} million THB (${pct(R(y1)/R(y0)-1)} vs ${y0})${pre} · foreign visitors bring ${foSh}%`));
+  // trend: latest real month and where the forecast heads
+  const last=agg([CUR]).v,yoy=last/agg([CUR-12]).v-1,fe=MONTHS.length-1,fv=agg([fe]).v,e=Math.round(errAt(fe)*100);
+  set('insTrend',TL(`เดือนล่าสุด (${mLabel(MONTHS[CUR])}) มีนักท่องเที่ยวราว ${cmp(last)} คน (${pct(yoy)} เทียบปีก่อน) · แนวโน้มถึงเดือน${monthLong(MONTHS[fe].m)}: ${pct(fv/last-1)} จากเดือนล่าสุด (คลาดเคลื่อนได้ราว ±${e}%)`,
+    `Latest month (${mLabel(MONTHS[CUR])}): about ${cmp(last)} visitors (${pct(yoy)} vs last year) · forecast to ${monthLong(MONTHS[fe].m)}: ${pct(fv/last-1)} vs the latest month (±${e}%)`));
+  // rain: rainy days and the wettest day
+  if(!weather)set('insRain',T().loading);
+  else{const d=weather.days.slice(1),wet=d.filter(x=>x.rain>=5).length,mx=d.reduce((a,b)=>b.rain>a.rain?b:a);
+    set('insRain',TL(`14 วันข้างหน้าฝนตกตั้งแต่ 5 มม. ${wet} วัน · ฝนหนักสุดวันที่ ${dLabel(mx.date)} (${mx.rain.toFixed(1)} มม.)${weather.live?'':' · ข้อมูลอากาศจำลอง'}`,
+      `${wet} rainy days (5 mm+) in the next 14 · wettest: ${dLabel(mx.date)} (${mx.rain.toFixed(1)} mm)${weather.live?'':' · mock weather'}`))}
+  // holidays: how many, and the day most countries are off together
+  if(!holidays)set('insHol',holStatus==='fail'?T().holFail:T().loading);
+  else{const l=holidays.filter(h=>daysAway(h.date)>=0&&daysAway(h.date)<=60);
+    if(!l.length)set('insHol',T().noHol60);
+    else{const by={};l.forEach(h=>(by[h.date.getTime()]??=new Set()).add(h.cc));const top=Object.entries(by).sort((a,b)=>b[1].size-a[1].size)[0],n=new Set(l.map(h=>h.cc)).size;
+      set('insHol',TL(`60 วันข้างหน้ามีวันหยุด ${l.length} วัน จาก ${n} ประเทศ · วันที่หลายประเทศหยุดพร้อมกันมากที่สุดคือ ${dLabel(new Date(+top[0]))} (${top[1].size} ประเทศ)`,
+        `${l.length} holidays in ${n} countries over the next 60 days · most countries off together: ${dLabel(new Date(+top[0]))} (${top[1].size})`))}}
+}
+
 function renderFilters(){
   const t=T(),sn=document.getElementById('selNat'),sz=document.getElementById('selZone');
   sn.innerHTML=`<option value="">${t.allNat}</option>`+NATS.map((_,ni)=>`<option value="${ni}">${natName(ni)}</option>`).join('');
   sz.innerHTML=`<option value="">${t.allZone}</option>`+ZONES.map((z,zi)=>`<option value="${zi}">${z[lang]}</option>`).join('');
   sn.value=state.nat??'';sz.value=state.zone??'';
   sn.classList.toggle('active',state.nat!=null);sz.classList.toggle('active',state.zone!=null);
-  document.querySelectorAll('#period button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===state.period));
+  // period buttons name the actual months they cover (e.g. "Aug–Oct 26") instead of a vague "3 months"
+  const mf=(mo,yr)=>new Intl.DateTimeFormat(t.loc,yr?{month:'short',year:'2-digit'}:{month:'short'}).format(new Date(mo.y,mo.m,1));
+  const pname={m1:TL('เดือนล่าสุดที่มีข้อมูล','Latest month with data'),m3:TL('3 เดือนล่าสุด','Latest 3 months'),ytd:TL('ตั้งแต่ต้นปี','Year to date')};
+  document.querySelectorAll('#period button').forEach(b=>{const s=state.period;state.period=b.dataset.p;const idx=periodIdx();state.period=s;
+    const a=MONTHS[idx[0]],z=MONTHS[idx.at(-1)],txt=idx.length===1?mf(z,1):`${mf(a,a.y!==z.y)}–${mf(z,1)}`;
+    b.textContent=txt;b.title=pname[b.dataset.p];b.setAttribute('aria-label',`${pname[b.dataset.p]} ${txt}`);
+    b.setAttribute('aria-pressed',b.dataset.p===state.period)});
   document.querySelectorAll('#langSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===lang));
   document.getElementById('clear').hidden=state.nat==null&&state.zone==null;
 }
 
-function renderAll(){renderFilters();renderKPIs();renderNext();renderMap();renderNat();renderSeason();renderRevenue();renderTrend();renderRain();renderHolidays();renderAnswers();renderAsOf();writeView()}
+function renderAll(){renderFilters();renderKPIs();renderNext();renderMap();renderNat();renderSeason();renderRevenue();renderTrend();renderRain();renderHolidays();renderAnswers();renderAsOf();renderInsights();writeView()}
 
 // ---------- Shareable view: filters + language live in the query string ----------
 // The URL is user input: only known codes and in-range zone indexes are accepted.
